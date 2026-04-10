@@ -1,315 +1,412 @@
-import React, { useState, useRef, useEffect } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import { Search, ShoppingCart, User, Menu, X, ChevronDown } from 'lucide-react'
+import React, { useEffect, useRef, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import {
+  Search,
+  ShoppingCart,
+  User,
+  Menu,
+  X,
+  ChevronDown,
+  Gift,
+  Heart,
+  ArrowRight,
+} from 'lucide-react';
+import { useCart } from '../../context/CartContext';
+import { useAuth } from '../../context/AuthContext';
 
-const Navbar = ({ cartCount }) => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const [isSearchOpen, setIsSearchOpen] = useState(false)
-  const [activeDropdown, setActiveDropdown] = useState(null)
-  const [searchQuery, setSearchQuery] = useState('')
-  const searchRef = useRef(null)
-  const shopDropdownRef = useRef(null)
-  const giftDropdownRef = useRef(null)
-  const navigate = useNavigate()
+const Navbar = () => {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [activeDropdown, setActiveDropdown] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const navRef = useRef(null);
+  const navigate = useNavigate();
+
+  const { cartCount, wishlist } = useCart();
+  const { user, isLoggedIn, logout } = useAuth();
+
+  useEffect(() => {
+    const onClickOutside = (e) => {
+      if (navRef.current && !navRef.current.contains(e.target)) {
+        setActiveDropdown(null);
+        setIsMenuOpen(false);
+      }
+    };
+
+    const onEscape = (e) => {
+      if (e.key === 'Escape') {
+        setActiveDropdown(null);
+        setIsMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', onClickOutside);
+    document.addEventListener('keydown', onEscape);
+    return () => {
+      document.removeEventListener('mousedown', onClickOutside);
+      document.removeEventListener('keydown', onEscape);
+    };
+  }, []);
+
+  useEffect(() => {
+    document.body.style.overflow = isMenuOpen ? 'hidden' : '';
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isMenuOpen]);
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    const q = searchQuery.trim();
+    if (!q) return;
+    navigate(`/search?q=${encodeURIComponent(q)}`);
+    setSearchQuery('');
+    setIsMenuOpen(false);
+    setActiveDropdown(null);
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate('/');
+  };
 
   const navItems = [
     { name: 'Home', path: '/' },
     { name: 'Shop', path: '/shop', hasDropdown: true },
     { name: 'Gift Ideas', path: '/gifts', hasDropdown: true },
+    { name: 'Custom Gift', path: '/custom-gift' },
     { name: 'Blogs', path: '/blogs' },
     { name: 'About', path: '/about' },
     { name: 'Contact', path: '/contact' },
-  ]
+  ];
 
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (shopDropdownRef.current && !shopDropdownRef.current.contains(event.target)) {
-        setActiveDropdown(null)
-      }
-      if (giftDropdownRef.current && !giftDropdownRef.current.contains(event.target)) {
-        setActiveDropdown(null)
-      }
-      if (searchRef.current && !searchRef.current.contains(event.target)) {
-        setIsSearchOpen(false)
-        setSearchQuery('')
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [])
+  const shopDropdown = [
+    {
+      title: 'Gift Categories',
+      items: [
+        { label: 'All Gifts', path: '/gifts' },
+        { label: 'Birthday Gifts', path: '/gifts?cat=birthday' },
+        { label: 'Anniversary Gifts', path: '/gifts?cat=anniversary' },
+        { label: 'Wedding Gifts', path: '/gifts?cat=wedding' },
+      ],
+    },
+    {
+      title: 'Popular Picks',
+      items: [
+        { label: 'Perfume', path: '/shop?cat=perfume' },
+        { label: 'Watches', path: '/shop?cat=watches' },
+        { label: 'Shoes', path: '/shop?cat=shoes' },
+        { label: 'Accessories', path: '/shop?cat=accessories' },
+      ],
+    },
+    {
+      title: 'By Budget',
+      items: [
+        { label: 'Under $25', path: '/gifts?cat=under-25' },
+        { label: '$25 - $50', path: '/gifts?cat=25-50' },
+        { label: '$50 - $100', path: '/gifts?cat=50-100' },
+        { label: '$100+', path: '/gifts?cat=above-100' },
+      ],
+    },
+    {
+      title: 'Trending',
+      items: [
+        { label: 'Personalized Gifts', path: '/gifts?cat=personalized' },
+        { label: 'Luxury Gifts', path: '/gifts?cat=luxury' },
+        { label: 'Eco-Friendly Gifts', path: '/gifts?cat=eco-friendly' },
+        { label: 'Best Sellers', path: '/shop?filter=bestseller' },
+      ],
+    },
+  ];
 
-  const handleSearch = (e) => {
-    e.preventDefault()
-    if (searchQuery.trim()) {
-      navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`)
-      setIsSearchOpen(false)
-      setSearchQuery('')
-    }
-  }
+  const giftDropdown = [
+    {
+      title: 'By Occasion',
+      items: [
+        { label: 'Birthday Gifts', path: '/gifts?cat=birthday' },
+        { label: 'Anniversary Gifts', path: '/gifts?cat=anniversary' },
+        { label: 'Wedding Gifts', path: '/gifts?cat=wedding' },
+        { label: 'Graduation Gifts', path: '/gifts?cat=graduation' },
+      ],
+    },
+    {
+      title: 'For Recipient',
+      items: [
+        { label: 'Gifts for Her', path: '/gifts?cat=for-her' },
+        { label: 'Gifts for Him', path: '/gifts?cat=for-him' },
+        { label: 'Gifts for Kids', path: '/gifts?cat=for-kids' },
+        { label: 'Family Gifts', path: '/gifts?cat=family' },
+      ],
+    },
+    {
+      title: 'Style Picks',
+      items: [
+        { label: 'Minimal', path: '/gifts?cat=minimal' },
+        { label: 'Premium', path: '/gifts?cat=premium' },
+        { label: 'Traditional', path: '/gifts?cat=traditional' },
+        { label: 'Modern', path: '/gifts?cat=modern' },
+      ],
+    },
+    {
+      title: 'Quick Links',
+      items: [
+        { label: 'Wishlist', path: '/wishlist' },
+        { label: 'Gift Ideas', path: '/gifts' },
+        { label: 'All Products', path: '/shop' },
+        { label: 'Custom Gift', path: '/custom-gift' },
+      ],
+    },
+  ];
 
-  const handleKeyPress = (e) => {
-    if (e.key === 'Enter' && searchQuery.trim()) {
-      e.preventDefault()
-      navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`)
-      setIsSearchOpen(false)
-      setSearchQuery('')
-    }
-  }
-
-  const toggleDropdown = (itemName) => {
-    if (activeDropdown === itemName) {
-      setActiveDropdown(null)
-    } else {
-      setActiveDropdown(itemName)
-    }
-  }
-
-  // For Shop - goes to /shop
-  const handleShopNavigation = (path) => {
-    setActiveDropdown(null)
-    navigate(path)
-  }
-
-  // For Gift Ideas - goes to /gifts
-  const handleGiftNavigation = (path) => {
-    setActiveDropdown(null)
-    navigate(path)
-  }
+  const renderDropdown = (menus) => (
+    <div className="absolute left-1/2 top-full z-50 mt-3 w-[min(1100px,calc(100vw-2rem))] -translate-x-1/2 rounded-2xl border border-gray-100 bg-white/95 backdrop-blur-md shadow-2xl transition-all duration-200 animate-in fade-in slide-in-from-top-2">
+      <div className="grid gap-8 p-6 lg:grid-cols-4">
+        {menus.map((group) => (
+          <div key={group.title}>
+            <h4 className="mb-4 text-xs font-semibold uppercase tracking-wider text-gray-400">
+              {group.title}
+            </h4>
+            <ul className="space-y-2.5">
+              {group.items.map((item) => (
+                <li key={item.label}>
+                  <Link
+                    to={item.path}
+                    className="group flex items-center gap-2 text-sm font-medium text-gray-600 transition-all hover:text-gray-900"
+                    onClick={() => setActiveDropdown(null)}
+                  >
+                    <ArrowRight
+                      size={12}
+                      className="-ml-0.5 opacity-0 transition-all group-hover:ml-0.5 group-hover:opacity-100"
+                    />
+                    {item.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 
   return (
-    <nav className="bg-white shadow-md sticky top-0 z-50">
-      <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-16 lg:h-20">
-          <Link to="/" className="text-2xl lg:text-3xl font-bold text-gray-800 flex-shrink-0">
-            mekog.
+    <div className="px-4 pt-3 pb-0">
+      <nav
+        ref={navRef}
+        className="flex h-16 items-center justify-between gap-6 rounded-2xl bg-white px-7 shadow-sm"
+      >
+        {/* Logo */}
+        <Link to="/" className="flex shrink-0 items-center gap-2">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-rose-400 via-orange-400 to-purple-500 text-white shadow-md transition-transform hover:scale-105">
+            <Gift size={18} />
+          </div>
+          <span className="font-display text-[18px] font-bold tracking-tight text-gray-950">
+            giftify.
+          </span>
+        </Link>
+
+        {/* Desktop Nav Links */}
+        <ul className="hidden items-center gap-8 lg:flex">
+          {navItems.map((item) => (
+            <li key={item.name} className="relative">
+              {item.hasDropdown ? (
+                <>
+                  <button
+                    onClick={() =>
+                      setActiveDropdown(activeDropdown === item.name ? null : item.name)
+                    }
+                    className="inline-flex items-center gap-1 text-[14px] font-medium text-gray-500 transition-colors hover:text-gray-900"
+                  >
+                    {item.name}
+                    <ChevronDown
+                      size={14}
+                      className={`transition-transform duration-200 ${
+                        activeDropdown === item.name ? 'rotate-180' : ''
+                      }`}
+                    />
+                  </button>
+                  {activeDropdown === item.name &&
+                    (item.name === 'Shop'
+                      ? renderDropdown(shopDropdown)
+                      : renderDropdown(giftDropdown))}
+                </>
+              ) : (
+                <Link
+                  to={item.path}
+                  className="text-[14px] font-medium text-gray-500 transition-colors hover:text-gray-900"
+                >
+                  {item.name}
+                </Link>
+              )}
+            </li>
+          ))}
+        </ul>
+
+        {/* Right: Search + Cart + Wishlist + Auth */}
+        <div className="flex items-center gap-3">
+          {/* Search bar */}
+          <form
+            onSubmit={handleSearch}
+            className="hidden items-center gap-2 rounded-full border border-gray-200 bg-gray-50 px-4 py-2 lg:flex"
+          >
+            <Search size={14} className="text-gray-400" />
+            <input
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search gifts..."
+              className="w-36 bg-transparent text-[13px] text-gray-800 outline-none placeholder:text-gray-400"
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery('')}
+                className="flex h-4 w-4 items-center justify-center rounded-full bg-gray-300 text-gray-600 hover:bg-gray-400"
+              >
+                <X size={9} />
+              </button>
+            )}
+          </form>
+
+          {/* Wishlist */}
+          <Link
+            to="/wishlist"
+            className="relative flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200 text-gray-700 transition-all hover:border-gray-400"
+            aria-label="Wishlist"
+          >
+            <Heart size={17} />
+            {wishlist.length > 0 && (
+              <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-gradient-to-r from-rose-400 to-orange-400 px-1 text-[10px] font-bold text-white shadow-sm">
+                {wishlist.length}
+              </span>
+            )}
           </Link>
 
-          <div className="hidden lg:flex items-center justify-center flex-1">
-            <div className="flex items-center space-x-6">
-              {navItems.map((item) => (
-                <div
-                  key={item.name}
-                  className="relative"
-                  ref={
-                    item.name === 'Shop' ? shopDropdownRef : 
-                    item.name === 'Gift Ideas' ? giftDropdownRef : null
-                  }
+          {/* Cart */}
+          <Link
+            to="/cart"
+            className="relative flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200 text-gray-700 transition-all hover:border-gray-400"
+            aria-label="Cart"
+          >
+            <ShoppingCart size={17} />
+            {cartCount > 0 && (
+              <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-gradient-to-r from-rose-400 to-orange-400 px-1 text-[10px] font-bold text-white shadow-sm">
+                {cartCount}
+              </span>
+            )}
+          </Link>
+
+          {/* Auth buttons - desktop */}
+          <div className="hidden items-center gap-2 sm:flex">
+            {isLoggedIn ? (
+              <>
+                <Link
+                  to="/profile"
+                  className="flex items-center gap-2 rounded-xl border border-gray-200 px-3 py-1.5 text-sm font-medium text-gray-700 transition-all hover:border-gray-300 hover:bg-gray-50"
                 >
-                  {item.hasDropdown ? (
-                    <button
-                      onClick={() => toggleDropdown(item.name)}
-                      className="text-gray-700 hover:text-blue-600 font-medium transition-colors flex items-center gap-1 whitespace-nowrap focus:outline-none"
-                    >
-                      {item.name}
-                      <ChevronDown 
-                        size={14} 
-                        className={`transition-transform duration-200 ${activeDropdown === item.name ? 'rotate-180' : ''}`}
-                      />
-                    </button>
-                  ) : (
-                    <Link
-                      to={item.path}
-                      className="text-gray-700 hover:text-blue-600 font-medium transition-colors whitespace-nowrap"
-                    >
-                      {item.name}
-                    </Link>
-                  )}
-                  
-                  {/* SHOP DROPDOWN - All Products goes to /shop */}
-                  {item.name === 'Shop' && activeDropdown === item.name && (
-                    <div className="fixed left-0 right-0 mt-0 bg-white shadow-xl border-t border-b border-gray-100 z-50">
-                      <div className="container mx-auto px-4 py-5">
-                        <div className="grid grid-cols-5 gap-6">
-                          <div>
-                            <h3 className="text-xs font-bold text-gray-800 uppercase tracking-wider mb-2">🛋️ SOFAS</h3>
-                            <ul className="space-y-1.5">
-                              <li><button onClick={() => handleShopNavigation('/shop?cat=sofa-sets')} className="text-sm text-gray-600 hover:text-blue-600">Sofa Sets</button></li>
-                              <li><button onClick={() => handleShopNavigation('/shop?cat=sectional-sofas')} className="text-sm text-gray-600 hover:text-blue-600">Sectional Sofas</button></li>
-                              <li><button onClick={() => handleShopNavigation('/shop?cat=chesterfields')} className="text-sm text-gray-600 hover:text-blue-600">Chesterfields</button></li>
-                            </ul>
-                          </div>
-                          <div>
-                            <h3 className="text-xs font-bold text-gray-800 uppercase tracking-wider mb-2">💺 CHAIRS</h3>
-                            <ul className="space-y-1.5">
-                              <li><button onClick={() => handleShopNavigation('/shop?cat=sofa-chairs')} className="text-sm text-gray-600 hover:text-blue-600">Sofa Chairs</button></li>
-                              <li><button onClick={() => handleShopNavigation('/shop?cat=accent-chairs')} className="text-sm text-gray-600 hover:text-blue-600">Accent Chairs</button></li>
-                              <li><button onClick={() => handleShopNavigation('/shop?cat=rocking-chairs')} className="text-sm text-gray-600 hover:text-blue-600">Rocking Chairs</button></li>
-                            </ul>
-                          </div>
-                          <div>
-                            <h3 className="text-xs font-bold text-gray-800 uppercase tracking-wider mb-2">🪑 TABLES</h3>
-                            <ul className="space-y-1.5">
-                              <li><button onClick={() => handleShopNavigation('/shop?cat=center-tables')} className="text-sm text-gray-600 hover:text-blue-600">Center Tables</button></li>
-                              <li><button onClick={() => handleShopNavigation('/shop?cat=coffee-tables')} className="text-sm text-gray-600 hover:text-blue-600">Coffee Tables</button></li>
-                              <li><button onClick={() => handleShopNavigation('/shop?cat=study-tables')} className="text-sm text-gray-600 hover:text-blue-600">Study Tables</button></li>
-                            </ul>
-                          </div>
-                          <div>
-                            <h3 className="text-xs font-bold text-gray-800 uppercase tracking-wider mb-2">🗄️ STORAGE</h3>
-                            <ul className="space-y-1.5">
-                              <li><button onClick={() => handleShopNavigation('/shop?cat=tv-units')} className="text-sm text-gray-600 hover:text-blue-600">TV Units</button></li>
-                              <li><button onClick={() => handleShopNavigation('/shop?cat=bookshelves')} className="text-sm text-gray-600 hover:text-blue-600">Bookshelves</button></li>
-                            </ul>
-                          </div>
-                          <div>
-                            <h3 className="text-xs font-bold text-gray-800 uppercase tracking-wider mb-2">🪑 MORE</h3>
-                            <ul className="space-y-1.5">
-                              <li><button onClick={() => handleShopNavigation('/shop?cat=ottomans')} className="text-sm text-gray-600 hover:text-blue-600">Ottomans</button></li>
-                              <li><button onClick={() => handleShopNavigation('/shop?cat=benches')} className="text-sm text-gray-600 hover:text-blue-600">Benches</button></li>
-                            </ul>
-                          </div>
-                        </div>
-
-                        {/* SHOP - All Products Button */}
-                        <div className="mt-4 pt-3 border-t border-gray-100 text-center">
-                          <Link
-                            to="/shop"
-                            onClick={() => setActiveDropdown(null)}
-                            className="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center justify-center gap-2 mx-auto"
-                          >
-                            🛍️ View All Products
-                          </Link>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                  
-                  {/* GIFT IDEAS DROPDOWN - All Gifts goes to /gifts */}
-                  {item.name === 'Gift Ideas' && activeDropdown === item.name && (
-                    <div className="fixed left-0 right-0 mt-0 bg-white shadow-xl border-t border-b border-gray-100 z-50">
-                      <div className="container mx-auto px-4 py-5">
-                        <div className="grid grid-cols-5 gap-6">
-                          <div>
-                            <h3 className="text-xs font-bold text-gray-800 uppercase tracking-wider mb-2">🎂 By Occasion</h3>
-                            <ul className="space-y-1.5">
-                              <li><button onClick={() => handleGiftNavigation('/gifts?cat=birthday')} className="text-sm text-gray-600 hover:text-pink-600">Birthday Gifts</button></li>
-                              <li><button onClick={() => handleGiftNavigation('/gifts?cat=anniversary')} className="text-sm text-gray-600 hover:text-pink-600">Anniversary Gifts</button></li>
-                              <li><button onClick={() => handleGiftNavigation('/gifts?cat=wedding')} className="text-sm text-gray-600 hover:text-pink-600">Wedding Gifts</button></li>
-                              <li><button onClick={() => handleGiftNavigation('/gifts?cat=graduation')} className="text-sm text-gray-600 hover:text-pink-600">Graduation Gifts</button></li>
-                              <li><button onClick={() => handleGiftNavigation('/gifts?cat=christmas')} className="text-sm text-gray-600 hover:text-pink-600">Christmas Gifts</button></li>
-                            </ul>
-                          </div>
-                          <div>
-                            <h3 className="text-xs font-bold text-gray-800 uppercase tracking-wider mb-2">👥 By Recipient</h3>
-                            <ul className="space-y-1.5">
-                              <li><button onClick={() => handleGiftNavigation('/gifts?cat=for-her')} className="text-sm text-gray-600 hover:text-pink-600">Gifts for Her</button></li>
-                              <li><button onClick={() => handleGiftNavigation('/gifts?cat=for-him')} className="text-sm text-gray-600 hover:text-pink-600">Gifts for Him</button></li>
-                              <li><button onClick={() => handleGiftNavigation('/gifts?cat=for-kids')} className="text-sm text-gray-600 hover:text-pink-600">Gifts for Kids</button></li>
-                            </ul>
-                          </div>
-                          <div>
-                            <h3 className="text-xs font-bold text-gray-800 uppercase tracking-wider mb-2">💰 By Price</h3>
-                            <ul className="space-y-1.5">
-                              <li><button onClick={() => handleGiftNavigation('/gifts?cat=under-25')} className="text-sm text-gray-600 hover:text-pink-600">Under $25</button></li>
-                              <li><button onClick={() => handleGiftNavigation('/gifts?cat=25-50')} className="text-sm text-gray-600 hover:text-pink-600">$25 - $50</button></li>
-                              <li><button onClick={() => handleGiftNavigation('/gifts?cat=50-100')} className="text-sm text-gray-600 hover:text-pink-600">$50 - $100</button></li>
-                              <li><button onClick={() => handleGiftNavigation('/gifts?cat=above-100')} className="text-sm text-gray-600 hover:text-pink-600">$100+</button></li>
-                            </ul>
-                          </div>
-                          <div>
-                            <h3 className="text-xs font-bold text-gray-800 uppercase tracking-wider mb-2">🔥 Trending</h3>
-                            <ul className="space-y-1.5">
-                              <li><button onClick={() => handleGiftNavigation('/gifts?cat=personalized')} className="text-sm text-gray-600 hover:text-pink-600">Personalized Gifts</button></li>
-                              <li><button onClick={() => handleGiftNavigation('/gifts?cat=luxury')} className="text-sm text-gray-600 hover:text-pink-600">Luxury Gifts</button></li>
-                              <li><button onClick={() => handleGiftNavigation('/gifts?cat=eco-friendly')} className="text-sm text-gray-600 hover:text-pink-600">Eco-Friendly Gifts</button></li>
-                            </ul>
-                          </div>
-                          <div>
-                            <h3 className="text-xs font-bold text-gray-800 uppercase tracking-wider mb-2">⚡ Quick Links</h3>
-                            <ul className="space-y-1.5">
-                              <li><button onClick={() => handleGiftNavigation('/gift-cards')} className="text-sm text-gray-600 hover:text-pink-600">Gift Cards</button></li>
-                              <li><button onClick={() => handleGiftNavigation('/wishlist')} className="text-sm text-gray-600 hover:text-pink-600">Wishlist</button></li>
-                            </ul>
-                          </div>
-                        </div>
-
-                        {/* GIFT IDEAS - All Gifts Button */}
-                        <div className="mt-4 pt-3 border-t border-gray-100 text-center">
-                          <Link
-                            to="/gifts"
-                            onClick={() => setActiveDropdown(null)}
-                            className="text-pink-600 hover:text-pink-800 text-sm font-medium flex items-center justify-center gap-2 mx-auto"
-                          >
-                            🎁 View All Gifts
-                          </Link>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
+                  <User size={14} />
+                  <span className="max-w-[100px] truncate">{user?.name || 'Account'}</span>
+                </Link>
+                <button
+                  onClick={handleLogout}
+                  className="rounded-xl border border-gray-200 px-3 py-1.5 text-sm font-medium text-gray-600 transition-all hover:border-gray-300 hover:bg-gray-50 hover:text-gray-700"
+                >
+                  Logout
+                </button>
+              </>
+            ) : (
+              <Link
+                to="/login"
+                className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-gray-900 to-gray-700 px-4 py-1.5 text-sm font-medium text-white shadow-sm transition-all hover:shadow-md hover:brightness-110"
+              >
+                <User size={14} />
+                Login
+              </Link>
+            )}
           </div>
 
-          {/* Icons Section */}
-          <div className="flex items-center space-x-3 flex-shrink-0">
-            <div className="relative" ref={searchRef}>
-              <button onClick={() => setIsSearchOpen(!isSearchOpen)} className="p-2 hover:bg-gray-100 rounded-full">
-                <Search size={20} />
-              </button>
-              {isSearchOpen && (
-                <div className="absolute top-1/2 right-full mr-2 transform -translate-y-1/2">
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    onKeyPress={handleKeyPress}
-                    placeholder="Search products..."
-                    className="w-64 px-4 py-2 border border-blue-500 rounded-lg focus:outline-none text-sm bg-white shadow-lg"
-                    autoFocus
-                  />
-                </div>
-              )}
-            </div>
-            <Link to="/cart" className="p-2 hover:bg-gray-100 rounded-full relative">
-              <ShoppingCart size={20} />
-              {cartCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                  {cartCount}
+          {/* Mobile menu toggle */}
+          <button
+            onClick={() => setIsMenuOpen((v) => !v)}
+            className="flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200 text-gray-700 transition-all hover:border-gray-400 lg:hidden"
+            aria-label="Menu"
+          >
+            {isMenuOpen ? <X size={18} /> : <Menu size={18} />}
+          </button>
+        </div>
+      </nav>
+
+      {/* Mobile Menu */}
+      {isMenuOpen && (
+        <div className="mt-2 rounded-2xl bg-white p-4 shadow-md lg:hidden">
+          <form
+            onSubmit={handleSearch}
+            className="mb-4 flex items-center gap-2 rounded-full border border-gray-200 bg-gray-50 px-4 py-2"
+          >
+            <Search size={14} className="text-gray-400" />
+            <input
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search gifts..."
+              className="w-full bg-transparent text-[13px] text-gray-800 outline-none placeholder:text-gray-400"
+            />
+          </form>
+          <div className="grid gap-1">
+            {navItems.map((item) => (
+              <Link
+                key={item.name}
+                to={item.path}
+                onClick={() => setIsMenuOpen(false)}
+                className="rounded-xl px-3 py-2.5 text-[14px] font-medium text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900"
+              >
+                {item.name}
+              </Link>
+            ))}
+            <div className="my-2 h-px bg-gray-100" />
+            <Link
+              to="/wishlist"
+              onClick={() => setIsMenuOpen(false)}
+              className="flex items-center justify-between rounded-xl px-3 py-2.5 text-[14px] font-medium text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900"
+            >
+              Wishlist
+              {wishlist.length > 0 && (
+                <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-gradient-to-r from-rose-400 to-orange-400 px-1.5 text-xs font-bold text-white">
+                  {wishlist.length}
                 </span>
               )}
             </Link>
-            <button className="p-2 hover:bg-gray-100 rounded-full">
-              <User size={20} />
-            </button>
-            <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="lg:hidden p-2">
-              {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
-            </button>
+            <div className="my-2 h-px bg-gray-100" />
+            {isLoggedIn ? (
+              <>
+                <Link
+                  to="/profile"
+                  onClick={() => setIsMenuOpen(false)}
+                  className="rounded-xl px-3 py-2.5 text-[14px] font-medium text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900"
+                >
+                  My Profile
+                </Link>
+                <button
+                  onClick={() => {
+                    handleLogout();
+                    setIsMenuOpen(false);
+                  }}
+                  className="w-full rounded-xl px-3 py-2.5 text-left text-[14px] font-medium text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900"
+                >
+                  Logout
+                </button>
+              </>
+            ) : (
+              <Link
+                to="/login"
+                onClick={() => setIsMenuOpen(false)}
+                className="rounded-xl px-3 py-2.5 text-[14px] font-medium text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900"
+              >
+                Login / Register
+              </Link>
+            )}
           </div>
         </div>
+      )}
+    </div>
+  );
+};
 
-        {/* Mobile Menu */}
-        {isMenuOpen && (
-          <div className="lg:hidden py-4 border-t">
-            {navItems.map((item) => (
-              <div key={item.name}>
-                {item.hasDropdown ? (
-                  <>
-                    <button onClick={() => toggleDropdown(item.name)} className="w-full flex items-center justify-between py-3">
-                      {item.name} <ChevronDown size={16} />
-                    </button>
-                    {activeDropdown === item.name && (
-                      <div className="pl-4 py-2">
-                        {item.name === 'Shop' ? (
-                          <Link to="/shop" className="block py-2 text-blue-600">🛍️ All Products</Link>
-                        ) : (
-                          <Link to="/gifts" className="block py-2 text-pink-600">🎁 All Gifts</Link>
-                        )}
-                      </div>
-                    )}
-                  </>
-                ) : (
-                  <Link to={item.path} className="block py-3" onClick={() => setIsMenuOpen(false)}>
-                    {item.name}
-                  </Link>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    </nav>
-  )
-}
-
-export default Navbar
+export default Navbar;
